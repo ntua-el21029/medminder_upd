@@ -120,7 +120,7 @@ class _ScanMedicationScreenState extends State<ScanMedicationScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'S???s? fa?�????',
+          "Φωτογραφήστε το φάρμακό σας",
           style: TextStyle(fontWeight: FontWeight.w700, color: Colors.black),
         ),
         actions: [
@@ -148,46 +148,24 @@ class _ScanMedicationScreenState extends State<ScanMedicationScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'S???a?e t? barcode ? �???e f?t???af?a t?? s?s?e?as?a?.',
+            Text(
+              _processing ? 'Επεξεργασία...' : 'Παρακαλώ τοποθετήστε το φάρμακο ώστε να φαίνεται το όνομά',
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 20),
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Expanded(
-                  child: FilledButton(
-                    onPressed: _processing ? null : _scanFromPhoto,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: accent,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                    ),
-                    child: Text(_processing ? 'Processing...' : 'Scan name from photo'),
+                FloatingActionButton.large(
+                  onPressed: _processing ? null : _scanFromPhoto,
+                  backgroundColor: accent,
+                  child: Icon(
+                    Icons.camera_alt_outlined,
+                    size: 40,
+                    color: Colors.white
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () => Navigator.pushNamed(context, '/add-manual'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: accent,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                    ),
-                    child: const Text('???s???? ?e???????ta'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
           ],
         ),
       ),
