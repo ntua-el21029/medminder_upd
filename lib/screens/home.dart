@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/notification_service.dart';
 import '../state/app_state.dart';
 import '../data/interactions.dart';
@@ -13,6 +16,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   static const bg = Color(0xFFF7FAFC);
   static const accent = Color(0xFF0BA5A4);
+  static const _medicationsStorageKey = 'medications';
 
   final List<MedicationItem> _items = [];
   String _displayName = '';
@@ -23,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
     NotificationService().init();
     AppState().loadSettings();
     _loadProfile();
+    _loadMedications();
   }
 
 
@@ -62,6 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
         notes: notes,
       );
       setState(() => _items.add(item));
+      await _persistMedications();
 
       if (allowNotifications && time != null) {
         await NotificationService().scheduleDaily(
@@ -259,6 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
             }
             if (!mounted) return;
             setState(() => _items.removeAt(index));
+            await _persistMedications();
           },
           child: Container(
             decoration: BoxDecoration(
@@ -330,6 +337,33 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     return confirmed ?? false;
   }
+
+  Future<void> _loadMedications() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_medicationsStorageKey);
+    if (raw == null || raw.isEmpty) return;
+    final decoded = jsonDecode(raw);
+    if (decoded is! List) return;
+    final loaded = <MedicationItem>[];
+    for (final item in decoded) {
+      if (item is Map) {
+        final mapped = MedicationItem.fromMap(Map<String, dynamic>.from(item));
+        if (mapped != null) loaded.add(mapped);
+      }
+    }
+    if (!mounted) return;
+    setState(() {
+      _items
+        ..clear()
+        ..addAll(loaded);
+    });
+  }
+
+  Future<void> _persistMedications() async {
+    final prefs = await SharedPreferences.getInstance();
+    final payload = _items.map((item) => item.toMap()).toList();
+    await prefs.setString(_medicationsStorageKey, jsonEncode(payload));
+  }
 }
 
 class MedicationItem {
@@ -356,5 +390,45 @@ class MedicationItem {
       parts.add('${time2!.hour.toString().padLeft(2, '0')}:${time2!.minute.toString().padLeft(2, '0')}');
     }
     return parts.isEmpty ? '--:--' : parts.join(' / ');
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'dose': dose,
+      'time': _encodeTime(time),
+      'time2': _encodeTime(time2),
+      'notes': notes,
+    };
+  }
+
+  static MedicationItem? fromMap(Map<String, dynamic> map) {
+    final name = (map['name'] ?? '').toString();
+    if (name.isEmpty) return null;
+    return MedicationItem(
+      name: name,
+      dose: (map['dose'] ?? '').toString(),
+      time: _decodeTime(map['time']),
+      time2: _decodeTime(map['time2']),
+      notes: (map['notes'] ?? '').toString(),
+    );
+  }
+
+  static String? _encodeTime(TimeOfDay? time) {
+    if (time == null) return null;
+    final h = time.hour.toString().padLeft(2, '0');
+    final m = time.minute.toString().padLeft(2, '0');
+    return '$h:$m';
+  }
+
+  static TimeOfDay? _decodeTime(dynamic value) {
+    final raw = value?.toString() ?? '';
+    if (raw.isEmpty) return null;
+    final match = RegExp(r'(\d{1,2}):(\d{2})').firstMatch(raw);
+    if (match == null) return null;
+    final h = int.tryParse(match.group(1)!);
+    final m = int.tryParse(match.group(2)!);
+    if (h == null || m == null) return null;
+    return TimeOfDay(hour: h, minute: m);
   }
 }
