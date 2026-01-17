@@ -28,7 +28,6 @@ class _ScanMedicationScreenState extends State<ScanMedicationScreen> {
 
     _handled = true;
 
-    // TODO: Use raw value (e.g. barcode) to prefill add-medication screen.
     Navigator.pop(context, {'name': raw});
   }
 

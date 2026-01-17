@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'screens/home.dart';
 import 'screens/profile.dart';
 import 'screens/add_medication.dart';
-import 'screens/scan_medication.dart';
+import 'screens/add_medication_camera.dart';
 import 'screens/check_interaction.dart';
 import 'screens/settings.dart';
 import 'screens/add_medication_manual.dart';
